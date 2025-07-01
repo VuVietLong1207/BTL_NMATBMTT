@@ -10,37 +10,37 @@
 
 <div align="center">
     <p align="center">
-        <img src="Đăng nhập.png" alt="Web" width="600"/>
+        <img src="Đăng nhập.jpg" alt="Web" width="600"/>
     </p>
 </div>
 <div align="center">
     <p align="center">
-        <img src="Đăng kí.png" alt="Web" width="600"/>
+        <img src="Đăng kí.jpg" alt="Web" width="600"/>
     </p>
 </div>
 <div align="center">
     <p align="center">
-        <img src="Đăng nhập người dùng.png" alt="Web" width="600"/>
+        <img src="Đăng nhập người dùng.jpg" alt="Web" width="600"/>
     </p>
 </div>
 <div align="center">
     <p align="center">
-        <img src="Upload File.png" alt="Web" width="600"/>
+        <img src="Upload File.jpg" alt="Web" width="600"/>
     </p>
 </div>
 <div align="center">
     <p align="center">
-        <img src="Trạng thái bảo mật file.png" alt="Web" width="600"/>
+        <img src="Trạng thái bảo mật file.jpg" alt="Web" width="600"/>
     </p>
 </div>
 <div align="center">
     <p align="center">
-        <img src="Lịch sử Upload.png" alt="Web" width="600"/>
+        <img src="Lịch sử Upload.jpg" alt="Web" width="600"/>
     </p>
 </div>
 <div align="center">
     <p align="center">
-        <img src="Lịch sử nhận file.png" alt="Web" width="600"/>
+        <img src="Lịch sử nhận file.jpg" alt="Web" width="600"/>
     </p>
 </div>
 <div align="center">
