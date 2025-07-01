@@ -45,6 +45,6 @@
 </div>
 <div align="center">
     <p align="center">
-        <img src="Gửi file.png" alt="Web" width="600"/>
+        <img src="Gửi file.jpg" alt="Web" width="600"/>
     </p>
 </div>
