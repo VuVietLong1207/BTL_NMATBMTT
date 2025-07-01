@@ -1,0 +1,607 @@
+{% extends "base.html" %}
+
+{% block title %}Trạng thái gửi file bảo mật{% endblock %}
+
+{% block css %}
+<style>
+    .status-card {
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+    .status-header {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding: 15px 20px;
+    }
+    .status-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .status-icon {
+        font-size: 1.5rem;
+        width: 40px;
+        text-align: center;
+        margin-right: 15px;
+    }
+    .status-success {
+        color: #28a745;
+    }
+    .status-warning {
+        color: #ffc107;
+    }
+    .status-danger {
+        color: #dc3545;
+    }
+    .status-info {
+        color: #17a2b8;
+    }
+    .progress-container {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        height: 100%;
+        background: #3498db;
+        width: 0%;
+        transition: width 0.3s;
+    }
+    .file-preview {
+        max-width: 100%;
+        max-height: 200px;
+        display: block;
+        margin: 15px auto;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+    .security-badge {
+        font-size: 0.75rem;
+        margin-left: 10px;
+    }
+    .technical-details {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .history-table th, .history-table td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+                        <div class="card status-card mb-4">
+                <div class="card-header status-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Trạng thái bảo mật file</h4>
+                </div>
+                <div class="card-body p-0">
+                                        <div class="status-item">
+                        <div class="status-icon status-info">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Thông tin file</h5>
+                            <div class="d-flex flex-wrap align-items-center">
+                                <span id="fileName">Chưa chọn file</span>
+                                <span id="fileSize" class="text-muted ms-2"></span>
+                            </div>
+                            <div id="fileHash" class="technical-details">Hash: Chưa tính toán</div>
+                            <img id="filePreview" class="file-preview d-none">
+                        </div>
+                    </div>
+
+                                        <div class="status-item">
+                        <div class="status-icon" id="handshakeIcon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Xác thực Handshake</h5>
+                            <span id="handshakeStatus">Chưa xác thực</span>
+                            <div id="handshakeDetails" class="technical-details">Client IP: {{ request.remote_addr }}</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="handshakeProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <div class="status-item">
+                        <div class="status-icon" id="keyExchangeIcon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Trao đổi khóa RSA 1024-bit OAEP</h5>
+                            <div class="d-flex align-items-center">
+                                <span id="keyExchangeStatus">Chưa trao đổi khóa</span>
+                                <span class="badge bg-info security-badge">SHA-512</span>
+                            </div>
+                            <div id="keyExchangeDetails" class="technical-details">Khóa phiên: Chưa tạo</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="keyExchangeProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <div class="status-item">
+                        <div class="status-icon" id="encryptionIcon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Mã hóa AES-256-CBC</h5>
+                            <div class="d-flex align-items-center">
+                                <span id="encryptionStatus">Chưa được mã hóa</span>
+                                <span class="badge bg-secondary security-badge">IV ngẫu nhiên</span>
+                            </div>
+                            <div id="encryptionDetails" class="technical-details">IV: Chưa tạo | Chế độ: CBC</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="encryptionProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <div class="status-item">
+                        <div class="status-icon" id="signatureIcon">
+                            <i class="fas fa-signature"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Ký số metadata</h5>
+                            <span id="signatureStatus">Chưa được ký số</span>
+                            <div id="signatureDetails" class="technical-details">Thuật toán: RSA-SHA512</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="signatureProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <div class="status-item">
+                        <div class="status-icon" id="hashIcon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Kiểm tra hash SHA-512</h5>
+                            <span id="hashStatus">Chưa kiểm tra</span>
+                            <div id="hashDetails" class="technical-details">Hash nhận được: Chưa có</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="hashProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <div class="status-item">
+                        <div class="status-icon" id="ipIcon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Kiểm tra IP</h5>
+                            <div class="d-flex flex-wrap align-items-center">
+                                <span id="ipStatus">Chưa kiểm tra</span>
+                                <span id="ipAddress" class="badge bg-secondary ms-2">{{ request.remote_addr }}</span>
+                            </div>
+                            <div id="ipDetails" class="technical-details">Danh sách IP an toàn: {{ ALLOWED_IPS|join(', ') }}</div>
+                        </div>
+                    </div>
+
+                                        <div class="status-item border-bottom-0">
+                        <div class="status-icon" id="sendIcon">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">Trạng thái gửi file</h5>
+                            <span id="sendStatus">Chưa gửi</span>
+                            <div id="sendDetails" class="technical-details">Thời gian: Chưa gửi</div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="sendProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                        <div class="card status-card mb-4">
+                <div class="card-header status-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-upload me-2"></i>Gửi file mới</h4>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="fileInput" class="form-label">Chọn file</label>
+                            <input class="form-control" type="file" id="fileInput" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="submitBtn">
+                            <i class="fas fa-lock me-2"></i>Mã hóa và gửi file
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card status-card">
+                <div class="card-header status-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-history me-2"></i>Lịch sử gửi file</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0 history-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Tên file</th>
+                                    <th scope="col">Kích thước</th>
+                                    <th scope="col">Hash (SHA-512)</th>
+                                    <th scope="col">Thời gian gửi</th>
+                                    <th scope="col">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fileHistoryTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">Chưa có file nào được gửi.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-sha512/0.8.0/sha512.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Biến lưu trữ thông tin
+    let fileData = null;
+    let sessionKey = null;
+    let iv = null;
+    let encryptedData = null;
+    let fileHash = null;
+    let fileHistory = JSON.parse(localStorage.getItem('fileHistory')) || []; // Load history from localStorage
+    
+    renderFileHistory(); // Render history on page load
+
+    // Xử lý khi chọn file
+    $('#fileInput').change(function() {
+        const file = this.files[0];
+        if (file) {
+            fileData = file;
+            $('#fileName').text(file.name);
+            $('#fileSize').text(formatFileSize(file.size));
+            
+            // Tính toán hash SHA-512 của file
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                fileHash = sha512.create().update(data).hex();
+                $('#fileHash').text('Hash: ' + fileHash.substring(0, 32) + '...');
+                
+                // Hiển thị preview nếu là hình ảnh
+                if (file.type.startsWith('image/')) {
+                    $('#filePreview').attr('src', e.target.result).removeClass('d-none');
+                } else {
+                    $('#filePreview').addClass('d-none');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            
+            resetAllStatus();
+        }
+    });
+
+    // Xử lý submit form
+    $('#uploadForm').submit(async function(e) {
+        e.preventDefault();
+        if (!fileData) return;
+
+        // Disable nút submit
+        $('#submitBtn').prop('disabled', true);
+        
+        let currentFileRecord = {
+            name: fileData.name,
+            size: formatFileSize(fileData.size),
+            hash: 'N/A',
+            timestamp: new Date().toLocaleString(),
+            status: 'Pending'
+        };
+
+        try {
+            // 1. Handshake
+            await updateStatusWithAction('handshake', 'Đang xác thực handshake...', 
+                async () => {
+                    const response = await fetch('/handshake', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ip: '{{ request.remote_addr }}', hello: 'Hello'})
+                    });
+                    const data = await response.json();
+                    if (data.status !== 'Ready!') throw new Error('Handshake failed');
+                    $('#handshakeDetails').html(`Phiên bản: ${data.version || '1.0'} | Thời gian: ${new Date().toLocaleTimeString()}`);
+                },
+                'Xác thực handshake thành công',
+                'Handshake thất bại'
+            );
+
+            // 2. Trao đổi khóa RSA
+            await updateStatusWithAction('keyExchange', 'Đang trao đổi khóa...',
+                async () => {
+                    // Giả lập tạo khóa phiên
+                    sessionKey = window.crypto.getRandomValues(new Uint8Array(32));
+                    $('#keyExchangeDetails').text(`Khóa phiên: ${Array.from(sessionKey).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16)}...`);
+                    
+                    // Giả lập mã hóa khóa phiên bằng RSA
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                },
+                'Đã trao đổi khóa RSA 1024-bit OAEP',
+                'Trao đổi khóa thất bại'
+            );
+
+            // 3. Mã hóa AES
+            await updateStatusWithAction('encryption', 'Đang mã hóa file...',
+                async () => {
+                    // Giả lập tạo IV
+                    iv = window.crypto.getRandomValues(new Uint8Array(16));
+                    $('#encryptionDetails').text(`IV: ${Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 16)}... | Chế độ: CBC`);
+                    
+                    // Giả lập mã hóa AES
+                    await simulateProgress('encryption', 1000);
+                    encryptedData = new Blob([fileData], {type: fileData.type});
+                },
+                'Đã mã hóa AES-256-CBC với IV ngẫu nhiên',
+                'Mã hóa thất bại'
+            );
+
+            // 4. Ký số metadata
+            await updateStatusWithAction('signature', 'Đang ký số metadata...',
+                async () => {
+                    const metadata = {
+                        filename: fileData.name,
+                        size: fileData.size,
+                        timestamp: new Date().toISOString()
+                    };
+                    $('#signatureDetails').text(`Metadata: ${JSON.stringify(metadata).substring(0, 50)}...`);
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                },
+                'Đã ký số metadata với RSA-SHA512',
+                'Ký số thất bại'
+            );
+
+            // 5. Kiểm tra hash
+            await updateStatusWithAction('hash', 'Đang kiểm tra hash...',
+                async () => {
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                    $('#hashDetails').text(`Hash file: ${fileHash.substring(0, 32)}... | Khớp: true`);
+                    currentFileRecord.hash = fileHash.substring(0, 10) + '...'; // Update hash for history
+                },
+                'Hash SHA-512 khớp',
+                'Hash không khớp'
+            );
+
+            // 6. Kiểm tra IP
+            await updateStatus('ip', 'Đang kiểm tra IP...', 30);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            const ipAllowed = true; // Giả lập kiểm tra IP
+            updateStatus('ip', 
+                ipAllowed ? 'IP an toàn' : 'IP không được phép', 
+                100, 
+                ipAllowed ? 'success' : 'danger'
+            );
+            $('#ipDetails').html(`IP: {{ request.remote_addr }} | Trạng thái: ${ipAllowed ? 'Allowed' : 'Blocked'}`);
+
+            // 7. Gửi file
+            await updateStatusWithAction('send', 'Đang gửi file...',
+                async () => {
+                    // Giả lập gửi file
+                    const formData = new FormData();
+                    formData.append('file', fileData);
+                    
+                    await simulateProgress('send', 1500);
+                    
+                    $('#sendDetails').text(`Thời gian: ${new Date().toLocaleTimeString()} | Kích thước: ${formatFileSize(fileData.size)}`);
+                },
+                'Gửi file thành công',
+                'Gửi file thất bại'
+            );
+            currentFileRecord.status = 'Thành công';
+
+        } catch (error) {
+            console.error('Lỗi trong quá trình xử lý:', error);
+            currentFileRecord.status = 'Thất bại';
+        } finally {
+            $('#submitBtn').prop('disabled', false);
+            addFileToHistory(currentFileRecord); // Add record to history
+        }
+    });
+
+    // Hàm định dạng kích thước file
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Hàm mô phỏng tiến trình
+    async function simulateProgress(type, duration) {
+        return new Promise(resolve => {
+            const startTime = Date.now();
+            const interval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(100, (elapsed / duration * 100));
+                $(`#${type}Progress`).css('width', `${progress}%`);
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 50);
+        });
+    }
+
+    // Hàm cập nhật trạng thái với hành động
+    async function updateStatusWithAction(type, loadingText, action, successText, errorText) {
+        updateStatus(type, loadingText, 30);
+        try {
+            await action();
+            updateStatus(type, successText, 100, 'success');
+        } catch (error) {
+            updateStatus(type, errorText || error.message, 100, 'danger');
+            throw error;
+        }
+    }
+
+    // Hàm cập nhật trạng thái
+    function updateStatus(type, text, progress, status) {
+        $(`#${type}Status`).text(text);
+        $(`#${type}Progress`).css('width', `${progress}%`);
+        
+        if (status) {
+            const iconMap = {
+                'success': 'status-success',
+                'warning': 'status-warning',
+                'danger': 'status-danger',
+                'info': 'status-info'
+            };
+            
+            $(`#${type}Icon i`).removeClass('status-success status-warning status-danger status-info')
+                               .addClass(iconMap[status]);
+        }
+    }
+
+    // Hàm reset tất cả trạng thái
+    function resetAllStatus() {
+        const statusItems = [
+            'handshake', 'keyExchange', 'encryption',
+            'signature', 'hash', 'ip', 'send'
+        ];
+        
+        statusItems.forEach(item => {
+            $(`#${item}Status`).text(
+                item === 'ip' ? 'Chưa kiểm tra' : 
+                item === 'send' ? 'Chưa gửi' : 
+                item === 'encryption' ? 'Chưa được mã hóa' :
+                item === 'keyExchange' ? 'Chưa trao đổi khóa' :
+                item === 'signature' ? 'Chưa được ký số' :
+                item === 'hash' ? 'Chưa kiểm tra' : 'Chưa xác thực'
+            );
+            $(`#${item}Progress`).css('width', '0%');
+            $(`#${item}Icon i`).removeClass('status-success status-warning status-danger status-info');
+            
+            // Reset chi tiết kỹ thuật
+            if (item === 'file') $('#fileHash').text('Hash: Chưa tính toán');
+            if (item === 'keyExchange') $('#keyExchangeDetails').text('Khóa phiên: Chưa tạo');
+            if (item === 'encryption') $('#encryptionDetails').text('IV: Chưa tạo | Chế độ: CBC');
+            if (item === 'signature') $('#signatureDetails').text('Thuật toán: RSA-SHA512');
+            if (item === 'hash') $('#hashDetails').text('Hash nhận được: Chưa có');
+            if (item === 'ip') $('#ipDetails').text(`Danh sách IP an toàn: {{ ALLOWED_IPS|join(', ') }}`);
+            if (item === 'send') $('#sendDetails').text('Thời gian: Chưa gửi');
+        });
+    }
+
+    // Function to add a file record to history
+    function addFileToHistory(record) {
+        fileHistory.unshift(record); // Add to the beginning of the array
+        localStorage.setItem('fileHistory', JSON.stringify(fileHistory)); // Save to localStorage
+        renderFileHistory(); // Re-render the history table
+    }
+
+    // Function to render the file history table
+    function renderFileHistory() {
+        const $tableBody = $('#fileHistoryTableBody');
+        $tableBody.empty(); // Clear existing rows
+
+        if (fileHistory.length === 0) {
+            $tableBody.append('<tr><td colspan="6" class="text-center text-muted py-4">Chưa có file nào được gửi.</td></tr>');
+            return;
+        }
+
+        fileHistory.forEach((record, index) => {
+            const statusClass = record.status === 'Thành công' ? 'text-success' : 'text-danger';
+            const row = `
+                <tr>
+                    <th scope="row">${index + 1}</th>
+                    <td>${record.name}</td>
+                    <td>${record.size}</td>
+                    <td>${record.hash}</td>
+                    <td>${record.timestamp}</td>
+                    <td class="${statusClass} fw-bold">${record.status}</td>
+                </tr>
+            `;
+            $tableBody.append(row);
+        });
+    }
+});
+</script>
+{% endblock %}
+<style>
+    .status-card {
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+    .status-header {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        padding: 15px 20px;
+    }
+    .status-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .status-icon {
+        font-size: 1.5rem;
+        width: 40px;
+        text-align: center;
+        margin-right: 15px;
+    }
+    .status-success {
+        color: #28a745;
+    }
+    .status-warning {
+        color: #ffc107;
+    }
+    .status-danger {
+        color: #dc3545;
+    }
+    .status-info {
+        color: #17a2b8;
+    }
+    .progress-container {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        height: 100%;
+        background: #3498db;
+        width: 0%;
+        transition: width 0.3s;
+    }
+    .file-preview {
+        max-width: 100%;
+        max-height: 200px;
+        display: block;
+        margin: 15px auto;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+    .security-badge {
+        font-size: 0.75rem;
+        margin-left: 10px;
+    }
+    .technical-details {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+</style>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hệ thống gửi CV bảo mật{% endblock %}</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Block for additional CSS -->
+    {% block css %}{% endblock %}
+</head>
+<body>
+    <div class="main-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="logo">
+                        <i class="fas fa-lock me-2"></i>
+                        <span>SecureCV Transfer</span>
+                    </div>
+                    <div class="auth-section">
+                        {% if 'user_id' in session %}
+                            <div class="dropdown">
+                                <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-shield me-1"></i>{{ session['username'] }}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#history-section"><i class="fas fa-history me-1"></i>Lịch sử gửi file</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Đăng xuất</a></li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-light me-2"><i class="fas fa-sign-in-alt me-1"></i>Đăng nhập</a>
+                            <a href="{{ url_for('register') }}" class="btn btn-light"><i class="fas fa-user-plus me-1"></i>Đăng ký</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-shield-alt me-2"></i>Bảo mật</h5>
+                        <ul class="security-features">
+                            <li><i class="fas fa-check-circle text-success me-2"></i>AES-256-CBC mã hóa</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>RSA 1024-bit OAEP</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Chữ ký số SHA-512</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p>© 2023 SecureCV Transfer. Bảo lưu mọi quyền.</p>
+                        <p class="text-muted">Phiên bản 1.0.0</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- jQuery + Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Block for additional JS -->
+    {% block js %}{% endblock %}
+</body>
+</html>
